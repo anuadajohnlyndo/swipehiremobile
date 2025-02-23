@@ -216,29 +216,15 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
               ),
             );
           }
-
-          // Send request
           var response = await request.send();
 
-          // Handle response
           if (response.statusCode == 200 || response.statusCode == 201) {
-            // if (mounted) {
-            //   Navigator.pushReplacement(
-            //     context,
-            //     MaterialPageRoute(builder: (context) => LoginPage()),
-            //   );
-            // }
-            _createEmployerProfile(
-                _firstnameController.text,
-                _lastnameController.text,
-                _positionController.text,
-                _companyController.text,
-                _firstnameController.text,
-                _addressController.text,
-                _phoneController.text,
-                accountId);
+            if (mounted) {
+              _getAccountId(
+                  _emailController.text, _passwordController.text, context);
+            }
           } else {
-            _showToast('Unsuccessful');
+            _showToast('An unexpected error has occurred, try again!');
           }
         } catch (e) {
           final result = "Error: $e";
@@ -257,7 +243,7 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
     try {
       final response = await http
           .post(
-            Uri.parse('http://10.0.2.2:5152/api/Auth/login'),
+            Uri.parse('http://10.0.2.2:5152/api/Recruit'),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -283,7 +269,44 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
           );
         }
       } else {
-        _showToast('Unsuccessful');
+        _showToast('An unexpected error has occurred, try again!');
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  Future<void> _getAccountId(email, password, context) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('http://10.0.2.2:5152/api/Auth/login'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "email": email,
+              "password": password,
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = jsonDecode(response.body);
+        final result = data['accountId'];
+        _createEmployerProfile(
+            _firstnameController.text,
+            _lastnameController.text,
+            _positionController.text,
+            _companyController.text,
+            _firstnameController.text,
+            _addressController.text,
+            _phoneController.text,
+            result.toString());
+        _showToast('Account successfully registered!');
+      } else {
+        _showToast('An unexpected error has occurred, try again!');
       }
     } catch (e) {
       final result = "Error: $e";

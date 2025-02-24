@@ -39,6 +39,9 @@ dependencies:
   delightful_toast: ^1.1.0
   flutter_animate: ^4.5.2
   image_picker: ^1.0.7
+  floating_menu_panel: ^0.0.2
+  iconly:
+  google_nav_bar: 
 
 dev_dependencies:
   flutter_test:

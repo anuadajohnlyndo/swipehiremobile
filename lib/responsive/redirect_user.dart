@@ -80,7 +80,10 @@ class RedirectUser extends StatelessWidget {
           future: getAccountType(accountId!),
           builder: (context, typeSnapshot) {
             if (typeSnapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
+              return Center(
+                  child: CircularProgressIndicator(
+                backgroundColor: Color(0xFFfffffe),
+              ));
             }
 
             if (typeSnapshot.hasError) {

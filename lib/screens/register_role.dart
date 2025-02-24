@@ -35,6 +35,7 @@ class RegisterRole extends State<RoleRegister> {
     );
   }
 
+  int counter = 0;
   String currentImg = 'assets/images/employer_img.png';
 
   void _animateImg() {
@@ -50,6 +51,7 @@ class RegisterRole extends State<RoleRegister> {
 
   @override
   Widget build(BuildContext context) {
+    counter++;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Color(0xFFfffffe),
@@ -101,6 +103,7 @@ class RegisterRole extends State<RoleRegister> {
                               onTap: () {
                                 setState(() {
                                   selectedRole = 'Employer';
+                                  counter++;
                                   _animateImg();
                                 });
                               },
@@ -140,6 +143,7 @@ class RegisterRole extends State<RoleRegister> {
                               onTap: () {
                                 setState(() {
                                   selectedRole = 'Intern';
+                                  counter++;
                                   _animateImg();
                                 });
                               },
@@ -231,7 +235,7 @@ class RegisterRole extends State<RoleRegister> {
                   Container(
                     alignment: Alignment.centerRight,
                     child: Animate(
-                      key: ValueKey(currentImg),
+                      key: ValueKey(counter),
                       effects: [
                         FadeEffect(
                           duration: 300.ms,

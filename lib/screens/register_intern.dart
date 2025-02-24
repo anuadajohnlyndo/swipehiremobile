@@ -143,7 +143,7 @@ class _InternRegisterState extends State<InternRegisterLayout> {
               );
             }
           } else {
-            _showToast('Unsuccessful');
+            _showToast('An unexpected error has occurred, try again!');
           }
         } catch (e) {
           final result = "Error: $e";

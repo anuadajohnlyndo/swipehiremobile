@@ -132,6 +132,7 @@ class _InternRegisterState extends State<InternRegisterLayout> {
           }
 
           // Send request
+          CircularProgressIndicator();
           var response = await request.send();
 
           // Handle response

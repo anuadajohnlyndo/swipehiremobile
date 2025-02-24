@@ -205,7 +205,7 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
           request.fields['Lastname'] = _lastnameController.text;
           request.fields['Email'] = _emailController.text;
           request.fields['Password'] = _passwordController.text;
-          request.fields['AccountTypeId'] = '9';
+          request.fields['AccountTypeId'] = '2';
 
           // Add image file
           if (_image != null) {

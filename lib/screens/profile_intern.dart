@@ -11,6 +11,7 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swipehire_2/screens/profile_forms/skills.dart';
 import 'package:swipehire_2/screens/profile_forms/summary.dart';
 
 class ProfileIntern extends StatefulWidget {
@@ -21,6 +22,12 @@ class ProfileIntern extends StatefulWidget {
 }
 
 class ProfileInternState extends State<ProfileIntern> {
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+  }
+
   void _showToast(message) {
     DelightToastBar(
       builder: (context) {
@@ -45,7 +52,16 @@ class ProfileInternState extends State<ProfileIntern> {
     ).show(context);
   }
 
-  void _getExperience(accountId) async {
+  String imageProfile = 'https://www.pngall.com/profile-png/',
+      fullname = '',
+      email = '',
+      contactNumber = '',
+      fieldName = '',
+      skills = '',
+      education = '',
+      experience = '',
+      summary = '';
+  void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('accountId');
@@ -55,38 +71,51 @@ class ProfileInternState extends State<ProfileIntern> {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5152/api/InternWorkExperience'),
+        Uri.parse('http://10.0.2.2:5152/api/Account/$accountId'),
         headers: {
           'Content-Type': 'application/json',
         },
       ).timeout(Duration(seconds: 20));
 
-      // Get accountId before making the request
-      String? accountId = await getAccountId();
-      print('Account ID: $accountId');
-
-      if (accountId == null) {
-        print('No account ID found.');
-        return;
-      }
-
       if (response.statusCode == 200 || response.statusCode == 201) {
         var data = jsonDecode(response.body);
+        setState(() {
+          String firstname = data['firstname'];
+          String lastname = data['lastname'];
+          imageProfile = data['internPictureUrl'];
+          fullname = '$firstname $lastname';
+          email = data['email'].toString();
+        });
+      } else {
+        _showToast('An unexpected error occured!');
+      }
 
-        if (data is Map && data['\$values'] is List) {
-          List<dynamic> values = data['\$values'];
-          List<String> experience = values.map((item) {
-            return item['internId'].toString();
-          }).toList();
+      final profile = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
 
-          if (experience.contains(accountId)) {
-            print('Account ID found in experience: $accountId');
-          } else {
-            print('none');
-          }
-        } else {
-          _showToast('Unexpected JSON structure: $data');
-        }
+      if (profile.statusCode == 200 || profile.statusCode == 201) {
+        var data = jsonDecode(profile.body);
+        setState(() {
+          contactNumber = data['contactNumber'] ?? 'Tap to edit';
+          fieldName = data['specialization'] ?? 'Tap to edit';
+          skills = data['skills'] ?? 'Tap to edit';
+          education = data['school'] ?? 'Tap to edit';
+          experience = data['company'] ?? 'Tap to edit';
+          summary = data['description'] ?? 'Tap to edit';
+        });
+      } else {
+        setState(() {
+          contactNumber = 'Tap to edit';
+          fieldName = 'Tap to edit';
+          skills = 'Tap to edit';
+          education = 'Tap to edit';
+          experience = 'Tap to edit';
+          summary = 'Tap to edit';
+        });
       }
     } catch (e) {
       final result = "Error: $e";
@@ -96,7 +125,6 @@ class ProfileInternState extends State<ProfileIntern> {
 
   @override
   Widget build(BuildContext context) {
-    _getExperience('1');
     return Scaffold(
       backgroundColor: Color(0xFFfffffe),
       body: ListView(
@@ -129,15 +157,19 @@ class ProfileInternState extends State<ProfileIntern> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Color(0x686146EA),
+                        ClipOval(
+                          child: Image.network(
+                            imageProfile,
+                            fit: BoxFit.cover,
+                            width: 120.0,
+                            height: 120.0,
+                          ),
                         ),
                         SizedBox(
                           height: 20,
                         ),
                         Text(
-                          'John Lyndo Anuada',
+                          fullname,
                           style: TextStyle(
                               fontFamily: 'Fustat Regular', fontSize: 26),
                         ),
@@ -187,7 +219,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: Text(
-                                '09981720994',
+                                contactNumber,
                                 style: TextStyle(
                                     fontFamily: 'Fustat Regular', fontSize: 18),
                               ),
@@ -207,7 +239,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: Text(
-                                'anuadajohnlyndo@gmail.com',
+                                email,
                                 style: TextStyle(
                                     fontFamily: 'Fustat Regular', fontSize: 18),
                               ),
@@ -236,7 +268,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsField();
+                    return ProfileFormsFields();
                   });
             },
             child: Padding(
@@ -260,7 +292,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: Text(
-                                'IT',
+                                fieldName,
                                 style: TextStyle(
                                     fontFamily: 'Fustat Regular', fontSize: 18),
                               ),
@@ -289,7 +321,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsField();
+                    return ProfileFormsSkills();
                   });
             },
             child: Padding(
@@ -313,7 +345,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: Text(
-                                'IT',
+                                skills,
                                 style: TextStyle(
                                     fontFamily: 'Fustat Regular', fontSize: 18),
                               ),
@@ -365,7 +397,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Expanded(
                               // Wrap Text with Expanded to allow wrapping
                               child: Text(
-                                'Cebu Technological University - Argao Campus',
+                                education,
                                 softWrap:
                                     true, // Text will wrap to the next line
                                 style: TextStyle(
@@ -421,7 +453,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Expanded(
                               // Wrap Text with Expanded to allow wrapping
                               child: Text(
-                                'I discovered that I cannot work under pressure',
+                                experience,
                                 softWrap:
                                     true, // Text will wrap to the next line
                                 style: TextStyle(
@@ -477,7 +509,7 @@ class ProfileInternState extends State<ProfileIntern> {
                             Expanded(
                               // Wrap Text with Expanded to allow wrapping
                               child: Text(
-                                'Flexible ang ferson',
+                                summary,
                                 softWrap:
                                     true, // Text will wrap to the next line
                                 style: TextStyle(

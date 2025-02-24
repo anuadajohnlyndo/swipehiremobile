@@ -101,7 +101,7 @@ class RedirectUser extends StatelessWidget {
             if (accountTypeId == '1') {
               return internLayout;
             }
-            if (accountTypeId == '9') {
+            if (accountTypeId == '2') {
               return employerLayout;
             }
 

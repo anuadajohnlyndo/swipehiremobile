@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ProfileFormsSummary extends StatefulWidget {
   const ProfileFormsSummary({super.key});
@@ -8,6 +14,76 @@ class ProfileFormsSummary extends StatefulWidget {
 }
 
 class ProfileFormsSummaryState extends State<ProfileFormsSummary> {
+  late TextEditingController _summaryController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+    _summaryController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _summaryController.dispose();
+    super.dispose();
+  }
+
+  void _showToast(message) {
+    DelightToastBar(
+      builder: (context) {
+        return ToastCard(
+            leading: Icon(
+              Icons.warning_rounded,
+              size: 32,
+              color: Color(0xFF6246EA),
+            ),
+            color: Color(0XFFfffffe),
+            title: Text(
+              message,
+              style: TextStyle(
+                fontFamily: 'Fustat Regular',
+                color: Color(0xFF272727),
+                fontSize: 16,
+              ),
+            ));
+      },
+      position: DelightSnackbarPosition.top,
+      autoDismiss: true,
+    ).show(context);
+  }
+
+  void _getUserData() async {
+    Future<String?> getAccountId() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('accountId');
+    }
+
+    String? accountId = await getAccountId();
+
+    try {
+      final profile = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
+
+      if (profile.statusCode == 200 || profile.statusCode == 201) {
+        var data = jsonDecode(profile.body);
+        setState(() {
+          _summaryController.text = data['description'];
+        });
+      } else {
+        setState(() {
+          _summaryController.text = '';
+        });
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -37,7 +113,7 @@ class ProfileFormsSummaryState extends State<ProfileFormsSummary> {
 
                   // Password TextField
                   TextFormField(
-                    initialValue: 'Flexible ang ferson',
+                    controller: _summaryController,
                     decoration: const InputDecoration(
                       labelText: 'Summary',
                       border: OutlineInputBorder(),
@@ -64,7 +140,9 @@ class ProfileFormsSummaryState extends State<ProfileFormsSummary> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(() {});
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(

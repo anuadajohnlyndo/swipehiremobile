@@ -6,25 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-class ProfileFormsEducation extends StatefulWidget {
-  const ProfileFormsEducation({super.key});
+class ProfileFormsSkills extends StatefulWidget {
+  const ProfileFormsSkills({super.key});
 
   @override
-  ProfileFormsEducationState createState() => ProfileFormsEducationState();
+  ProfileFormsSkillsState createState() => ProfileFormsSkillsState();
 }
 
-class ProfileFormsEducationState extends State<ProfileFormsEducation> {
-  late TextEditingController _educationController = TextEditingController();
+class ProfileFormsSkillsState extends State<ProfileFormsSkills> {
+  late TextEditingController _skillsController = TextEditingController();
   @override
   void initState() {
     super.initState();
     _getUserData();
-    _educationController = TextEditingController();
+    _skillsController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _educationController.dispose();
+    _skillsController.dispose();
     super.dispose();
   }
 
@@ -71,11 +71,11 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
       if (profile.statusCode == 200 || profile.statusCode == 201) {
         var data = jsonDecode(profile.body);
         setState(() {
-          _educationController.text = data['description'];
+          _skillsController.text = data['skills'];
         });
       } else {
         setState(() {
-          _educationController.text = '';
+          _skillsController.text = '';
         });
       }
     } catch (e) {
@@ -102,7 +102,7 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
-                    'Edit Education',
+                    'Edit Skills',
                     style:
                         TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 28),
                   ),
@@ -113,9 +113,9 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
 
                   // Password TextField
                   TextFormField(
-                    controller: _educationController,
+                    controller: _skillsController,
                     decoration: const InputDecoration(
-                      labelText: 'Summary',
+                      labelText: 'Skills',
                       border: OutlineInputBorder(),
                       alignLabelWithHint:
                           true, // Aligns the label to the top for multiline

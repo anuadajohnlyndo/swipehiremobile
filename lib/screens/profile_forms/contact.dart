@@ -1,4 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:delightful_toast/delight_toast.dart';
+import 'package:delightful_toast/toast/components/toast_card.dart';
+import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileFormsContact extends StatefulWidget {
   const ProfileFormsContact({super.key});
@@ -8,6 +14,95 @@ class ProfileFormsContact extends StatefulWidget {
 }
 
 class ProfileFormsContactState extends State<ProfileFormsContact> {
+  late TextEditingController _emailController = TextEditingController();
+  late TextEditingController _phoneController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserData();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  void _showToast(message) {
+    DelightToastBar(
+      builder: (context) {
+        return ToastCard(
+            leading: Icon(
+              Icons.warning_rounded,
+              size: 32,
+              color: Color(0xFF6246EA),
+            ),
+            color: Color(0XFFfffffe),
+            title: Text(
+              message,
+              style: TextStyle(
+                fontFamily: 'Fustat Regular',
+                color: Color(0xFF272727),
+                fontSize: 16,
+              ),
+            ));
+      },
+      position: DelightSnackbarPosition.top,
+      autoDismiss: true,
+    ).show(context);
+  }
+
+  void _getUserData() async {
+    Future<String?> getAccountId() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('accountId');
+    }
+
+    String? accountId = await getAccountId();
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Account/$accountId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          _emailController.text = data['email'];
+        });
+      } else {
+        _showToast('An unexpected error occured!');
+      }
+
+      final contactResponse = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Intern/Account/$accountId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
+
+      if (contactResponse.statusCode == 200 ||
+          contactResponse.statusCode == 201) {
+        var data = jsonDecode(contactResponse.body);
+        setState(() {
+          _phoneController.text = data['contactNumber'];
+        });
+      } else {
+        _showToast('An unexpected error occured!');
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -37,8 +132,7 @@ class ProfileFormsContactState extends State<ProfileFormsContact> {
 
                   // Email TextField
                   TextFormField(
-                    //controller: _firstnameController,
-                    initialValue: '09981720994',
+                    controller: _phoneController,
                     decoration: const InputDecoration(
                       labelText: 'Phone',
                       border: OutlineInputBorder(),
@@ -55,8 +149,7 @@ class ProfileFormsContactState extends State<ProfileFormsContact> {
                   const SizedBox(height: 16.0),
                   // Password TextField
                   TextFormField(
-                    //controller: _lastnameController,
-                    initialValue: 'anuadajohn@gmail.com',
+                    controller: _emailController,
                     decoration: const InputDecoration(
                       labelText: 'Email',
                       border: OutlineInputBorder(),

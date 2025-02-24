@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:iconly/iconly.dart';
-import 'package:swipehire_2/screens/profile_forms/contact.dart';
-import 'package:swipehire_2/screens/profile_forms/education.dart';
-import 'package:swipehire_2/screens/profile_forms/experience.dart';
-import 'package:swipehire_2/screens/profile_forms/field.dart';
-import 'package:swipehire_2/screens/profile_forms/name.dart';
+import 'package:swipehire_2/screens/profile_forms/address.dart';
+import 'package:swipehire_2/screens/profile_forms/company.dart';
+import 'package:swipehire_2/screens/profile_forms/contact_employer.dart';
+import 'package:swipehire_2/screens/profile_forms/field_employer.dart';
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:swipehire_2/screens/profile_forms/skills.dart';
-import 'package:swipehire_2/screens/profile_forms/summary.dart';
+import 'package:swipehire_2/screens/profile_forms/name_employer.dart';
+import 'package:swipehire_2/screens/profile_forms/position.dart';
 
-class ProfileIntern extends StatefulWidget {
-  const ProfileIntern({super.key});
+class ProfileEmployer extends StatefulWidget {
+  const ProfileEmployer({super.key});
 
   @override
-  ProfileInternState createState() => ProfileInternState();
+  ProfileEmployerState createState() => ProfileEmployerState();
 }
 
-class ProfileInternState extends State<ProfileIntern> {
+class ProfileEmployerState extends State<ProfileEmployer> {
   @override
   void initState() {
     super.initState();
@@ -57,10 +56,9 @@ class ProfileInternState extends State<ProfileIntern> {
       email = '',
       contactNumber = '',
       fieldName = '',
-      skills = '',
-      education = '',
-      experience = '',
-      summary = '';
+      company = '',
+      address = '',
+      position = '';
   void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
@@ -84,13 +82,14 @@ class ProfileInternState extends State<ProfileIntern> {
           String lastname = data['lastname'];
           imageProfile = data['internPictureUrl'];
           fullname = '$firstname $lastname';
+          email = data['email'].toString();
         });
       } else {
         _showToast('An unexpected error occured!');
       }
 
       final profile = await http.get(
-        Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+        Uri.parse('http://10.0.2.2:5152/api/Recruit/account/$accountId'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -99,22 +98,19 @@ class ProfileInternState extends State<ProfileIntern> {
       if (profile.statusCode == 200 || profile.statusCode == 201) {
         var data = jsonDecode(profile.body);
         setState(() {
-          contactNumber = data['contactNumber'] ?? 'Tap to edit';
-          _getFieldName(data['fieldId']);
-          skills = data['skills'] ?? 'Tap to edit';
-          education = data['school'] ?? 'Tap to edit';
-          experience = data['specialization'] ?? 'Tap to edit';
-          summary = data['description'] ?? 'Tap to edit';
-          email = data['email'] ?? 'Tap to edit';
+          contactNumber = data['phoneNumber'] ?? 'Tap to edit';
+          _getFieldName(data['field']);
+          company = data['company'] ?? 'Tap to edit';
+          address = data['address'] ?? 'Tap to edit';
+          position = data['position'] ?? 'Tap to edit';
         });
       } else {
         setState(() {
           contactNumber = 'Tap to edit';
           fieldName = 'Tap to edit';
-          skills = 'Tap to edit';
-          education = 'Tap to edit';
-          experience = 'Tap to edit';
-          summary = 'Tap to edit';
+          company = 'Tap to edit';
+          address = 'Tap to edit';
+          position = 'Tap to edit';
         });
       }
     } catch (e) {
@@ -165,7 +161,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsName();
+                    return ProfileFormsNameEmployer();
                   });
             },
             child: Padding(
@@ -218,7 +214,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsContact();
+                    return ProfileFormsContactEmployer();
                   });
             },
             child: Padding(
@@ -277,7 +273,7 @@ class ProfileInternState extends State<ProfileIntern> {
             ),
           ),
 
-          //FIELD
+          //Explore
           Padding(
             padding:
                 const EdgeInsets.only(top: 10, bottom: 0, left: 20, right: 20),
@@ -291,7 +287,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsFields();
+                    return ProfileFormsFieldsEmployer();
                   });
             },
             child: Padding(
@@ -308,7 +304,7 @@ class ProfileInternState extends State<ProfileIntern> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Icon(IconlyBold.work),
+                            Icon(Icons.explore),
                             SizedBox(
                               width: 15,
                             ),
@@ -330,12 +326,12 @@ class ProfileInternState extends State<ProfileIntern> {
             ),
           ),
 
-          //SKILLS
+          //COMPANY
           Padding(
             padding:
                 const EdgeInsets.only(top: 10, bottom: 0, left: 20, right: 20),
             child: Text(
-              'Skills',
+              'Company',
               style: TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 32),
             ),
           ),
@@ -344,7 +340,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsSkills();
+                    return ProfileFormsCompany();
                   });
             },
             child: Padding(
@@ -361,14 +357,14 @@ class ProfileInternState extends State<ProfileIntern> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Icon(IconlyBold.star),
+                            Icon(Icons.business),
                             SizedBox(
                               width: 15,
                             ),
                             Padding(
                               padding: const EdgeInsets.only(right: 15),
                               child: Text(
-                                skills,
+                                company,
                                 style: TextStyle(
                                     fontFamily: 'Fustat Regular', fontSize: 18),
                               ),
@@ -383,12 +379,12 @@ class ProfileInternState extends State<ProfileIntern> {
             ),
           ),
 
-          //EDUCATION
+          //ADDRESS
           Padding(
             padding:
                 const EdgeInsets.only(top: 10, bottom: 0, left: 20, right: 20),
             child: Text(
-              'Education',
+              'Address',
               style: TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 32),
             ),
           ),
@@ -397,7 +393,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsEducation();
+                    return ProfileFormsAddress();
                   });
             },
             child: Padding(
@@ -415,12 +411,12 @@ class ProfileInternState extends State<ProfileIntern> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(IconlyBold.edit),
+                            Icon(IconlyBold.location),
                             SizedBox(width: 15),
                             Expanded(
                               // Wrap Text with Expanded to allow wrapping
                               child: Text(
-                                education,
+                                address,
                                 softWrap:
                                     true, // Text will wrap to the next line
                                 style: TextStyle(
@@ -439,12 +435,12 @@ class ProfileInternState extends State<ProfileIntern> {
             ),
           ),
 
-          //Experience
+          //POSITION
           Padding(
             padding:
                 const EdgeInsets.only(top: 10, bottom: 0, left: 20, right: 20),
             child: Text(
-              'Experience',
+              'Position',
               style: TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 32),
             ),
           ),
@@ -453,7 +449,7 @@ class ProfileInternState extends State<ProfileIntern> {
               showModalBottomSheet(
                   context: context,
                   builder: (BuildContext context) {
-                    return ProfileFormsExperience();
+                    return ProfileFormsPosition();
                   });
             },
             child: Padding(
@@ -471,68 +467,12 @@ class ProfileInternState extends State<ProfileIntern> {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(IconlyBold.chart),
+                            Icon(IconlyBold.work),
                             SizedBox(width: 15),
                             Expanded(
                               // Wrap Text with Expanded to allow wrapping
                               child: Text(
-                                experience,
-                                softWrap:
-                                    true, // Text will wrap to the next line
-                                style: TextStyle(
-                                  fontFamily: 'Fustat Regular',
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          //Summary
-          Padding(
-            padding:
-                const EdgeInsets.only(top: 10, bottom: 0, left: 20, right: 20),
-            child: Text(
-              'Summary',
-              style: TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 32),
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return ProfileFormsSummary();
-                  });
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(
-                  top: 0, bottom: 10, left: 20, right: 20),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Container(
-                  color: Color(0xFFFAFAFA),
-                  child: Padding(
-                    padding: const EdgeInsets.all(15.0),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(IconlyBold.profile),
-                            SizedBox(width: 15),
-                            Expanded(
-                              // Wrap Text with Expanded to allow wrapping
-                              child: Text(
-                                summary,
+                                position,
                                 softWrap:
                                     true, // Text will wrap to the next line
                                 style: TextStyle(

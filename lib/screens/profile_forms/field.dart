@@ -5,6 +5,7 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:swipehire_2/screens/home_intern.dart';
 
 class ProfileFormsFields extends StatefulWidget {
   const ProfileFormsFields({super.key});
@@ -15,6 +16,7 @@ class ProfileFormsFields extends StatefulWidget {
 
 class ProfileFormsFieldsState extends State<ProfileFormsFields> {
   late TextEditingController _fieldsController = TextEditingController();
+  String dropdownValue = '1';
   @override
   void initState() {
     super.initState();
@@ -52,6 +54,7 @@ class ProfileFormsFieldsState extends State<ProfileFormsFields> {
     ).show(context);
   }
 
+  String phone = '';
   void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
@@ -71,12 +74,78 @@ class ProfileFormsFieldsState extends State<ProfileFormsFields> {
       if (profile.statusCode == 200 || profile.statusCode == 201) {
         var data = jsonDecode(profile.body);
         setState(() {
-          _fieldsController.text = data['skills'];
+          phone = data['contactNumber'];
+          dropdownValue = data['fieldId'].toString();
+          _getFieldName(dropdownValue);
         });
       } else {
         setState(() {
-          _fieldsController.text = '';
+          _getFieldName(dropdownValue);
         });
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void _getFieldName(id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Field/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          _fieldsController.text = data['name'] ?? "Error...";
+        });
+      } else {
+        _fieldsController.text = "Error...";
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void _updateField() async {
+    Future<String?> getAccountId() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('accountId');
+    }
+
+    String? accountId = await getAccountId();
+
+    try {
+      final response = await http
+          .put(
+            Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "id": 0,
+              "contactNumber": phone,
+              "accountId": accountId,
+              "fieldId": dropdownValue,
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeIntern()),
+          );
+        }
+      } else {
+        _showToast('Something went wrong!');
       }
     } catch (e) {
       final result = "Error: $e";
@@ -112,25 +181,61 @@ class ProfileFormsFieldsState extends State<ProfileFormsFields> {
                   ),
 
                   // Password TextField
-                  TextFormField(
-                    controller: _fieldsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Skills',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint:
-                          true, // Aligns the label to the top for multiline
+                  DropdownButton<String>(
+                    value: dropdownValue,
+                    elevation: 16,
+                    style: const TextStyle(
+                      color: Colors.deepPurple,
+                      fontFamily: 'Fustat ExtraBold',
+                      fontSize: 18,
                     ),
-                    style: TextStyle(
-                      fontFamily: 'Fustat Regular',
-                      fontSize: 16,
+                    underline: Container(
+                      height: 2,
+                      color: Colors.deepPurpleAccent,
                     ),
-                    maxLines: null, // Makes it expand as needed
-                    minLines: 2, // Sets a minimum height
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter education';
-                      }
-                      return null;
+                    // Step 2: Provide the list of items
+                    items: const [
+                      DropdownMenuItem(
+                        value: '1',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Tehnology'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '2',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Healthcare'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '3',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Finance'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '4',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Education'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '5',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Marketing'),
+                        ),
+                      ),
+                    ],
+                    // Step 3: Handle the selection
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        dropdownValue = newValue!;
+                      });
                     },
                   ),
 
@@ -140,7 +245,9 @@ class ProfileFormsFieldsState extends State<ProfileFormsFields> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _updateField();
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(

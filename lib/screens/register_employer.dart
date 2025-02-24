@@ -43,7 +43,6 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
   final TextEditingController _companyController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _positionController = TextEditingController();
-  final TextEditingController _fieldController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
 
   final TextEditingController _passwordController = TextEditingController();
@@ -154,6 +153,7 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
     });
   }
 
+  String dropdownValue = '1';
   void _submitField() {
     if (_formFieldKey.currentState!.validate()) {
       setState(() {
@@ -300,7 +300,7 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
             _lastnameController.text,
             _positionController.text,
             _companyController.text,
-            _firstnameController.text,
+            dropdownValue,
             _addressController.text,
             _phoneController.text,
             result.toString());
@@ -1177,20 +1177,61 @@ class _EmployerRegisterState extends State<EmployerRegisterLayout> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   // Email TextField
-                                  TextFormField(
-                                    controller: _fieldController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Field',
-                                      border: OutlineInputBorder(),
+                                  DropdownButton<String>(
+                                    value: dropdownValue,
+                                    elevation: 16,
+                                    style: const TextStyle(
+                                      color: Colors.deepPurple,
+                                      fontFamily: 'Fustat ExtraBold',
+                                      fontSize: 18,
                                     ),
-                                    style: TextStyle(
-                                        fontFamily: 'Fustat Regular',
-                                        fontSize: 16),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter field';
-                                      }
-                                      return null;
+                                    underline: Container(
+                                      height: 2,
+                                      color: Colors.deepPurpleAccent,
+                                    ),
+                                    // Step 2: Provide the list of items
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: '1',
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text('Tehnology'),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: '2',
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text('Healthcare'),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: '3',
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text('Finance'),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: '4',
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text('Education'),
+                                        ),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: '5',
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text('Marketing'),
+                                        ),
+                                      ),
+                                    ],
+                                    // Step 3: Handle the selection
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        dropdownValue = newValue!;
+                                      });
                                     },
                                   ),
                                   const SizedBox(height: 16.0),

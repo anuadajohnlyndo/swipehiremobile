@@ -1,31 +1,31 @@
 import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:delightful_toast/delight_toast.dart';
 import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-import 'package:swipehire_2/screens/home_intern.dart';
 
-class ProfileFormsEducation extends StatefulWidget {
-  const ProfileFormsEducation({super.key});
+class ProfileFormsPosition extends StatefulWidget {
+  const ProfileFormsPosition({super.key});
 
   @override
-  ProfileFormsEducationState createState() => ProfileFormsEducationState();
+  ProfileFormsPositionState createState() => ProfileFormsPositionState();
 }
 
-class ProfileFormsEducationState extends State<ProfileFormsEducation> {
-  late TextEditingController _educationController = TextEditingController();
+class ProfileFormsPositionState extends State<ProfileFormsPosition> {
+  late TextEditingController _positionController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _getUserData();
-    _educationController = TextEditingController();
+    _positionController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _educationController.dispose();
+    _positionController.dispose();
     super.dispose();
   }
 
@@ -53,7 +53,6 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     ).show(context);
   }
 
-  String phone = '', email = '';
   void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
@@ -63,28 +62,21 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     String? accountId = await getAccountId();
 
     try {
-      final profile = await http.get(
-        Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+      final contactResponse = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Recruit/account/$accountId'),
         headers: {
           'Content-Type': 'application/json',
         },
       ).timeout(Duration(seconds: 20));
 
-      if (profile.statusCode == 200 || profile.statusCode == 201) {
-        var data = jsonDecode(profile.body);
+      if (contactResponse.statusCode == 200 ||
+          contactResponse.statusCode == 201) {
+        var data = jsonDecode(contactResponse.body);
         setState(() {
-          email = data['email'];
-          phone = data['contactNumber'];
-          if (data['school'] == 'Tap to edit') {
-            _educationController.text = '';
-          } else {
-            _educationController.text = data['school'];
-          }
+          _positionController.text = data['position'];
         });
       } else {
-        setState(() {
-          _educationController.text = '';
-        });
+        _showToast('An unexpected error occured!');
       }
     } catch (e) {
       final result = "Error: $e";
@@ -92,47 +84,36 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     }
   }
 
-  void _updateEducation() async {
-    Future<String?> getAccountId() async {
-      final prefs = await SharedPreferences.getInstance();
-      return prefs.getString('accountId');
-    }
+  // void _updateUserData() async {
+  //   Future<String?> getAccountId() async {
+  //     final prefs = await SharedPreferences.getInstance();
+  //     return prefs.getString('accountId');
+  //   }
 
-    String? accountId = await getAccountId();
+  //   String? accountId = await getAccountId();
 
-    try {
-      final response = await http
-          .put(
-            Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              "id": 0,
-              "contactNumber": phone,
-              "accountId": accountId,
-              "email": email,
-              "school": _educationController.text,
-            }),
-          )
-          .timeout(Duration(seconds: 20));
+  //   try {
+  //     final contactResponse = await http.get(
+  //       Uri.parse('http://10.0.2.2:5152/api/Recruit/ByAccount/$accountId'),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //     ).timeout(Duration(seconds: 20));
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        if (mounted) {
-          Navigator.pop(context);
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomeIntern()),
-          );
-        }
-      } else {
-        _showToast('Something went wrong!');
-      }
-    } catch (e) {
-      final result = "Error: $e";
-      _showToast(result.toString());
-    }
-  }
+  //     if (contactResponse.statusCode == 200 ||
+  //         contactResponse.statusCode == 201) {
+  //       var data = jsonDecode(contactResponse.body);
+  //       setState(() {
+  //         _positionController.text = data['position'];
+  //       });
+  //     } else {
+  //       _showToast('An unexpected error occured!');
+  //     }
+  //   } catch (e) {
+  //     final result = "Error: $e";
+  //     _showToast(result.toString());
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +133,7 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
-                    'Edit Education',
+                    'Edit Position',
                     style:
                         TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 28),
                   ),
@@ -163,36 +144,29 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
 
                   // Password TextField
                   TextFormField(
-                    controller: _educationController,
+                    controller: _positionController,
                     decoration: const InputDecoration(
-                      labelText: 'Education',
+                      labelText: 'Position',
                       border: OutlineInputBorder(),
-                      alignLabelWithHint:
-                          true, // Aligns the label to the top for multiline
                     ),
+
                     style: TextStyle(
-                      fontFamily: 'Fustat Regular',
-                      fontSize: 16,
-                    ),
-                    maxLines: null, // Makes it expand as needed
-                    minLines: 2, // Sets a minimum height
+                        fontFamily: 'Fustat Regular',
+                        fontSize: 16), // Hide the input for password
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter education';
+                        return 'Please enter position';
                       }
                       return null;
                     },
                   ),
-
                   const SizedBox(height: 24.0),
                   // Login Button
 
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        _updateEducation();
-                      },
+                      onPressed: () {},
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(

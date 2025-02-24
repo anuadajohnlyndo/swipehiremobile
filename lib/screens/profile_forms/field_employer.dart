@@ -5,27 +5,30 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:swipehire_2/screens/home_intern.dart';
+import 'package:swipehire_2/screens/home_employer.dart';
 
-class ProfileFormsEducation extends StatefulWidget {
-  const ProfileFormsEducation({super.key});
+class ProfileFormsFieldsEmployer extends StatefulWidget {
+  const ProfileFormsFieldsEmployer({super.key});
 
   @override
-  ProfileFormsEducationState createState() => ProfileFormsEducationState();
+  ProfileFormsFieldsEmployerState createState() =>
+      ProfileFormsFieldsEmployerState();
 }
 
-class ProfileFormsEducationState extends State<ProfileFormsEducation> {
-  late TextEditingController _educationController = TextEditingController();
+class ProfileFormsFieldsEmployerState
+    extends State<ProfileFormsFieldsEmployer> {
+  late TextEditingController _fieldsController = TextEditingController();
+  String dropdownValue = '1';
   @override
   void initState() {
     super.initState();
     _getUserData();
-    _educationController = TextEditingController();
+    _fieldsController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _educationController.dispose();
+    _fieldsController.dispose();
     super.dispose();
   }
 
@@ -53,7 +56,6 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     ).show(context);
   }
 
-  String phone = '', email = '';
   void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
@@ -64,7 +66,7 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
 
     try {
       final profile = await http.get(
-        Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+        Uri.parse('http://10.0.2.2:5152/api/Recruit/account/$accountId'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -73,17 +75,12 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
       if (profile.statusCode == 200 || profile.statusCode == 201) {
         var data = jsonDecode(profile.body);
         setState(() {
-          email = data['email'];
-          phone = data['contactNumber'];
-          if (data['school'] == 'Tap to edit') {
-            _educationController.text = '';
-          } else {
-            _educationController.text = data['school'];
-          }
+          dropdownValue = data['field'];
+          _getFieldName(dropdownValue);
         });
       } else {
         setState(() {
-          _educationController.text = '';
+          _fieldsController.text = '';
         });
       }
     } catch (e) {
@@ -92,7 +89,30 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     }
   }
 
-  void _updateEducation() async {
+  void _getFieldName(id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://10.0.2.2:5152/api/Field/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ).timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = jsonDecode(response.body);
+        setState(() {
+          _fieldsController.text = data['name'] ?? "Error...";
+        });
+      } else {
+        _fieldsController.text = "Error...";
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void _updateField() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
       return prefs.getString('accountId');
@@ -103,16 +123,13 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
     try {
       final response = await http
           .put(
-            Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+            Uri.parse('http://10.0.2.2:5152/api/Recruit/ByAccount/$accountId'),
             headers: {
               'Content-Type': 'application/json',
             },
             body: jsonEncode({
-              "id": 0,
-              "contactNumber": phone,
+              "field": dropdownValue,
               "accountId": accountId,
-              "email": email,
-              "school": _educationController.text,
             }),
           )
           .timeout(Duration(seconds: 20));
@@ -122,11 +139,18 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
           Navigator.pop(context);
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeIntern()),
+            MaterialPageRoute(builder: (context) => HomeEmployer()),
           );
         }
       } else {
-        _showToast('Something went wrong!');
+        _showToast('Save Changes!');
+        if (mounted) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeEmployer()),
+          );
+        }
       }
     } catch (e) {
       final result = "Error: $e";
@@ -152,7 +176,7 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   Text(
-                    'Edit Education',
+                    'Edit Field',
                     style:
                         TextStyle(fontFamily: 'Fustat ExtraBold', fontSize: 28),
                   ),
@@ -162,25 +186,61 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
                   ),
 
                   // Password TextField
-                  TextFormField(
-                    controller: _educationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Education',
-                      border: OutlineInputBorder(),
-                      alignLabelWithHint:
-                          true, // Aligns the label to the top for multiline
+                  DropdownButton<String>(
+                    value: dropdownValue,
+                    elevation: 16,
+                    style: const TextStyle(
+                      color: Colors.deepPurple,
+                      fontFamily: 'Fustat ExtraBold',
+                      fontSize: 18,
                     ),
-                    style: TextStyle(
-                      fontFamily: 'Fustat Regular',
-                      fontSize: 16,
+                    underline: Container(
+                      height: 2,
+                      color: Colors.deepPurpleAccent,
                     ),
-                    maxLines: null, // Makes it expand as needed
-                    minLines: 2, // Sets a minimum height
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter education';
-                      }
-                      return null;
+                    // Step 2: Provide the list of items
+                    items: const [
+                      DropdownMenuItem(
+                        value: '1',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Tehnology'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '2',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Healthcare'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '3',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Finance'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '4',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Education'),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: '5',
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text('Marketing'),
+                        ),
+                      ),
+                    ],
+                    // Step 3: Handle the selection
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        dropdownValue = newValue!;
+                      });
                     },
                   ),
 
@@ -191,7 +251,7 @@ class ProfileFormsEducationState extends State<ProfileFormsEducation> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        _updateEducation();
+                        _updateField();
                       },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),

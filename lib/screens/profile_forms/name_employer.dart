@@ -7,16 +7,17 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:swipehire_2/screens/home_intern.dart';
+import 'package:swipehire_2/screens/home_employer.dart';
 
-class ProfileFormsName extends StatefulWidget {
-  const ProfileFormsName({super.key});
+class ProfileFormsNameEmployer extends StatefulWidget {
+  const ProfileFormsNameEmployer({super.key});
 
   @override
-  ProfileFormsNameState createState() => ProfileFormsNameState();
+  ProfileFormsNameEmployerState createState() =>
+      ProfileFormsNameEmployerState();
 }
 
-class ProfileFormsNameState extends State<ProfileFormsName> {
+class ProfileFormsNameEmployerState extends State<ProfileFormsNameEmployer> {
   late TextEditingController _firstnameController = TextEditingController();
   late TextEditingController _lastnameController = TextEditingController();
   String imageProfile = 'https://www.pngall.com/profile-png/';
@@ -137,7 +138,7 @@ class ProfileFormsNameState extends State<ProfileFormsName> {
       request.fields['Lastname'] = _lastnameController.text;
       request.fields['Email'] = email; // Ensure this is initialized
       request.fields['Password'] = '';
-      request.fields['AccountTypeId'] = '1'; // Ensure this is initialized
+      request.fields['AccountTypeId'] = '2'; // Ensure this is initialized
 
       // Add image file if present
       if (_image != null) {
@@ -159,7 +160,7 @@ class ProfileFormsNameState extends State<ProfileFormsName> {
           Navigator.pop(context);
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeIntern()),
+            MaterialPageRoute(builder: (context) => HomeEmployer()),
           );
         }
       } else {
@@ -168,7 +169,7 @@ class ProfileFormsNameState extends State<ProfileFormsName> {
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeIntern()),
+            MaterialPageRoute(builder: (context) => HomeEmployer()),
           );
         }
       }

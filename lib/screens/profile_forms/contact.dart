@@ -5,6 +5,7 @@ import 'package:delightful_toast/toast/components/toast_card.dart';
 import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:swipehire_2/screens/home_intern.dart';
 
 class ProfileFormsContact extends StatefulWidget {
   const ProfileFormsContact({super.key});
@@ -65,22 +66,6 @@ class ProfileFormsContactState extends State<ProfileFormsContact> {
     String? accountId = await getAccountId();
 
     try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:5152/api/Account/$accountId'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      ).timeout(Duration(seconds: 20));
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        var data = jsonDecode(response.body);
-        setState(() {
-          _emailController.text = data['email'];
-        });
-      } else {
-        _showToast('An unexpected error occured!');
-      }
-
       final contactResponse = await http.get(
         Uri.parse('http://10.0.2.2:5152/api/Intern/Account/$accountId'),
         headers: {
@@ -92,10 +77,56 @@ class ProfileFormsContactState extends State<ProfileFormsContact> {
           contactResponse.statusCode == 201) {
         var data = jsonDecode(contactResponse.body);
         setState(() {
-          _phoneController.text = data['contactNumber'];
+          _emailController.text = data['email'];
+          if (data['contactNumber'] == 'Tap to edit') {
+            _phoneController.text = '';
+          } else {
+            _phoneController.text = data['contactNumber'];
+          }
         });
       } else {
         _showToast('An unexpected error occured!');
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void _updateContact() async {
+    Future<String?> getAccountId() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('accountId');
+    }
+
+    String? accountId = await getAccountId();
+
+    try {
+      final response = await http
+          .put(
+            Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "id": 0,
+              "contactNumber": _phoneController.text,
+              "accountId": accountId,
+              "email": _emailController.text,
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeIntern()),
+          );
+        }
+      } else {
+        _showToast('Something went wrong!');
       }
     } catch (e) {
       final result = "Error: $e";
@@ -171,7 +202,9 @@ class ProfileFormsContactState extends State<ProfileFormsContact> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _updateContact();
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(

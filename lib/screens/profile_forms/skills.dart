@@ -5,6 +5,7 @@ import 'package:delightful_toast/toast/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:swipehire_2/screens/home_intern.dart';
 
 class ProfileFormsSkills extends StatefulWidget {
   const ProfileFormsSkills({super.key});
@@ -52,6 +53,7 @@ class ProfileFormsSkillsState extends State<ProfileFormsSkills> {
     ).show(context);
   }
 
+  String phone = '', email = '';
   void _getUserData() async {
     Future<String?> getAccountId() async {
       final prefs = await SharedPreferences.getInstance();
@@ -71,12 +73,60 @@ class ProfileFormsSkillsState extends State<ProfileFormsSkills> {
       if (profile.statusCode == 200 || profile.statusCode == 201) {
         var data = jsonDecode(profile.body);
         setState(() {
-          _skillsController.text = data['skills'];
+          email = data['email'];
+          phone = data['contactNumber'];
+          if (data['skills'] == 'Tap to edit') {
+            _skillsController.text = '';
+          } else {
+            _skillsController.text = data['skills'];
+          }
         });
       } else {
         setState(() {
           _skillsController.text = '';
         });
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void _updateSkills() async {
+    Future<String?> getAccountId() async {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString('accountId');
+    }
+
+    String? accountId = await getAccountId();
+
+    try {
+      final response = await http
+          .put(
+            Uri.parse('http://10.0.2.2:5152/api/Intern/account/$accountId'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "id": 0,
+              "contactNumber": phone,
+              "accountId": accountId,
+              "email": email,
+              "skills": _skillsController.text,
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeIntern()),
+          );
+        }
+      } else {
+        _showToast('Something went wrong!');
       }
     } catch (e) {
       final result = "Error: $e";
@@ -140,7 +190,9 @@ class ProfileFormsSkillsState extends State<ProfileFormsSkills> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _updateSkills();
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(vertical: 14),
                         textStyle: TextStyle(

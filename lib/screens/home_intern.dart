@@ -42,8 +42,11 @@ class HomeInternState extends State<HomeIntern> {
       ),
       backgroundColor: Color(0xFFfffffe),
       bottomNavigationBar: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
           backgroundColor: Color(0xFFfffffe),
           currentIndex: myIndex,
+          selectedItemColor: Color(0xFF6246EA), // Color when selected
+          unselectedItemColor: Colors.grey, // Color when not selected
           onTap: (index) {
             if (index == 2) {
               if (mounted) {

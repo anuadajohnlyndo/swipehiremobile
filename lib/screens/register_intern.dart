@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -138,10 +139,8 @@ class _InternRegisterState extends State<InternRegisterLayout> {
           // Handle response
           if (response.statusCode == 200 || response.statusCode == 201) {
             if (mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
+              _getAccountId(
+                  _emailController.text, _passwordController.text, context);
             }
           } else {
             _showToast('An unexpected error has occurred, try again!');
@@ -155,6 +154,84 @@ class _InternRegisterState extends State<InternRegisterLayout> {
           _showToast('Password doesn\'t match!');
         });
       }
+    }
+  }
+
+  Future<void> _getAccountId(email, password, context) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('http://10.0.2.2:5152/api/Auth/login'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "email": email,
+              "password": password,
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        var data = jsonDecode(response.body);
+        final result = data['accountId'];
+        addTemporaryData(result);
+      } else {
+        _showToast('An unexpected error has occurred, try again!');
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
+    }
+  }
+
+  void addTemporaryData(id) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('http://10.0.2.2:5152/api/Intern'),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              "id": 0,
+              "firstname": _firstnameController.text,
+              "lastname": _lastnameController.text,
+              "contactNumber": "Tap to edit",
+              "email": _emailController.text,
+              "specialization": "Tap to edit",
+              "skills": "Tap to edit",
+              "description": "Tap to edit",
+              "hasProfile": true,
+              "accountId": id,
+              "fieldId": 1,
+              "school": "Tap to edit",
+              "degree": "Tap to edit",
+              "startDate": "2025-02-24T19:06:08.555Z",
+              "endDate": "2025-02-24T19:06:08.555Z",
+              "company": "Tap to edit",
+              "companyLocation": "Tap to edit",
+              "position": "Tap to edit",
+              "startWorkDate": "2025-02-24T19:06:08.555Z",
+              "endWorkDate": "2025-02-24T19:06:08.555Z"
+            }),
+          )
+          .timeout(Duration(seconds: 20));
+
+      // Handle response
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+        }
+      } else {
+        _showToast('An unexpected error has occurred, try again!');
+      }
+    } catch (e) {
+      final result = "Error: $e";
+      _showToast(result.toString());
     }
   }
 
